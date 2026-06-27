@@ -1,4 +1,4 @@
-# 🏥 TreatMe - Enterprise Home Healthcare System
+# 🏩TreatMe - Enterprise Home Healthcare System
 
 ![Architecture](https://img.shields.io/badge/Architecture-Microservices-blue)
 ![Java](https://img.shields.io/badge/Java-Spring_Boot-green)
