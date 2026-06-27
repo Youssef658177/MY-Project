@@ -1,1 +1,82 @@
 
+version: '3.8'
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: treatme_db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASS}
+      MYSQL_DATABASE: TreatMe_DB
+    ports:
+      - "3306:3306"
+    networks:
+      - db_net
+
+  redis-cache:
+    image: redis:7.0-alpine
+    container_name: treatme_redis
+    networks:
+      - backend_net
+
+  rabbitmq-server:
+    image: rabbitmq:3-management-alpine
+    container_name: treatme_rabbitmq
+    ports:
+      - "15672:15672" # لوحة تحكم RabbitMQ
+    networks:
+      - broker_net
+
+  zipkin-server:
+    image: openzipkin/zipkin
+    container_name: treatme_zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - backend_net
+
+  cpp-service:
+    build: ./microservices/cpp-core
+    container_name: treatme_cpp_engine
+    depends_on:
+      - rabbitmq-server
+    networks:
+      - broker_net
+
+  python-service:
+    build: ./microservices/python-analytics
+    container_name: treatme_python_analytics
+    networks:
+      - backend_net
+
+  java-backend:
+    build: ./backend
+    container_name: treatme_java_core
+    depends_on:
+      - mysql-db
+      - redis-cache
+      - rabbitmq-server
+    networks:
+      - frontend_net
+      - backend_net
+      - db_net
+      - broker_net
+
+  frontend-server:
+    build: ./frontend
+    container_name: treatme_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - java-backend
+    networks:
+      - frontend_net
+
+networks:
+  frontend_net:
+    driver: bridge
+  backend_net:
+    driver: bridge
+  db_net:
+    driver: bridge
+  broker_net:
+    driver: bridge
